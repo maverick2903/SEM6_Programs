@@ -19,7 +19,7 @@
         align-items: center;
         justify-content: center;
         font-family: Arial, Helvetica, sans-serif;
-        background-color: rgb(184, 219, 230);
+        background-image: linear-gradient(to right, rgba(31, 213, 240, 0), rgb(4, 217, 224));;
     }
 
     #map {
@@ -64,8 +64,8 @@
 
 <body>
     <h2>Location Recommender</h2>
-    <div>Enter what you would like to search for: </div>
-    <input id = "place">
+    <div>What are your thoughts right now?</div>
+    <input id = "text">
     <div>Enter your search radius in m: </div>
     <input id = "radius" type="number">
     <button onclick="findPlaces()">Submit</button>
@@ -83,7 +83,7 @@
     console.log(lat,long)
 
     const findPlaces = async () => {
-        const place = document.getElementById('place').value;
+        const text = document.getElementById('text').value;
         const radius = document.getElementById('radius').value;
         var map = L.map('map').setView([lat,long], 13);
 
@@ -95,29 +95,54 @@
             .bindPopup('Your current location')
             .openPopup();
         
-
-            const url = `https://trueway-places.p.rapidapi.com/FindPlacesNearby?location=${lat}%2C${long}&type=${place}&radius=${radius}&language=en`;
-            const options = {
-                method: 'GET',
+        const getRecc = async (text) => {
+            console.log(text)
+            const settings = {
+                method: 'POST',
                 headers: {
-                    'X-RapidAPI-Key': '630ceab4a3mshcfba19e4f804eefp1ef079jsn1726396e50ca',
-                    'X-RapidAPI-Host': 'trueway-places.p.rapidapi.com'
-                }
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({text:text}) // Add the body here
             };
+            try {
+                const fetchResponse = await fetch("https://62ba-34-125-248-101.ngrok-free.app/process_text", settings);
+                const data = await fetchResponse.json();
+                return data;
+            } catch (e) {
+                return e;
+            }    
+        }
+        let placeList = await getRecc(text)
+        console.log(placeList)
+        for (let i in placeList) {
+    setTimeout(async () => {
+        console.log(placeList[i]);
+        const url = `https://trueway-places.p.rapidapi.com/FindPlacesNearby?location=${lat}%2C${long}&type=${placeList[i]}&radius=${radius}&language=en`;
+        const options = {
+            method: 'GET',
+            headers: {
+                'X-RapidAPI-Key': '630ceab4a3mshcfba19e4f804eefp1ef079jsn1726396e50ca',
+                'X-RapidAPI-Host': 'trueway-places.p.rapidapi.com'
+            }
+        };
 
         try {
             const response = await fetch(url, options);
-            let result = await response.text();
-            result = JSON.parse(result)
-            for (let i in result.results){
-                console.log(result.results[i])
-                L.marker([result.results[i].location.lat,result.results[i].location.lng]).addTo(map)
-                .bindPopup(result.results[i].name)
-                .openPopup();
+            const result = await response.json();
+            for (let j in result.results) {
+                console.log(result.results[j]);
+                L.marker([result.results[j].location.lat, result.results[j].location.lng]).addTo(map)
+                    .bindPopup(result.results[j].name)
+                    .openPopup();
             }
         } catch (error) {
             console.error(error);
         }
+    },i* 5000); // Delay each iteration by i seconds (adjust the delay time as needed)
+}
+
+
+
     }
 
 
