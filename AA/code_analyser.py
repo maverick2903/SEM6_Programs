@@ -81,6 +81,9 @@ def analyze_code(file_path):
     print(f"Push Count: {push_count}")
     print(f"Pop Count: {pop_count}")
 
+    with open('analyzed_code.txt', 'w') as file:
+        file.write(str(push_count)+str(pop_count))
 
-file_path = 'samplec.c'
+
+file_path = 'samplepy.py'
 analyze_code(file_path)
