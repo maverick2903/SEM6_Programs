@@ -1,6 +1,6 @@
 import re
 
-with open('samplec.c', 'r') as file:
+with open('AA\samplec.c', 'r') as file:
     lst = [line.strip() for line in file if line.strip()]
 
 code = []
