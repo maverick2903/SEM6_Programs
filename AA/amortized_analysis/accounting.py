@@ -1,15 +1,20 @@
-class aggregate:
+class accounting:
     def __init__(self):
         self.stack = []
         self.cost = 0
         self.totalOperations = 0
+        self.amortizedCost = 0
+        self.creditBank = 0
 
     def push(self, element):
         self.stack.append(element)
         self.cost += 1
         self.totalOperations += 1
+        self.amortizedCost += 2
+        self.creditBank += 1
         print(f"Pushed {element}")
         self.displayStack()
+        
 
     def pop(self):
         if not self.stack:
@@ -18,8 +23,11 @@ class aggregate:
         popped = self.stack.pop()
         self.cost += 1
         self.totalOperations += 1
-        print(f"Popped {popped}")
-        self.displayStack() 
+        self.amortizedCost += 1
+        self.creditBank -= 1
+        print(f"Popped {popped}") 
+        self.displayStack()
+
 
     def multipop(self, k):
         print("Multipop starts")
@@ -32,11 +40,13 @@ class aggregate:
         print("Multipop ends")
         self.displayStack()
 
+
     def displayStack(self):
-        print(self.stack,"\n")
+        print(self.stack)
+        print(f"Credit Bank: {self.creditBank}\n")
 
 
-stack = aggregate()
+stack = accounting()
 
 stack.push(10)
 stack.push(20)
@@ -49,4 +59,4 @@ stack.pop()
 
 print("Total Cost: ", stack.cost)
 print("Total Operations: ", stack.totalOperations)
-print("Amortized Cost per operation: ", stack.cost/stack.totalOperations)
+print("Amortized Cost: ", stack.amortizedCost)
