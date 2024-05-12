@@ -7,19 +7,19 @@ a = int(input('Private Key a: '))
 b = int(input('Private Key b: '))
 
 # Key generated for a
-x = pow(g, a, p)
+Xa = pow(g, a, p)
 
 # Key generated for b
-y = pow(g, b, p)
+Xb = pow(g, b, p)
 
 print('Generated Keys:')
-print('Key for a:', x)
-print('Key for b:', y)
+print('Key for a:', Xa)
+print('Key for b:', Xb)
 
 # Symmetric keys generated
-ka = pow(y, a, p)
-kb = pow(x, b, p)
+Ka = pow(Xb, a, p)
+Kb = pow(Xa, b, p)
 
 print('Symmetric Keys:')
-print('Key for a:', ka)
-print('Key for b:', kb)
+print('Key for a:', Ka)
+print('Key for b:', Kb)
