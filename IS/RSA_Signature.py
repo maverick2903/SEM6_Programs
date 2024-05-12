@@ -1,39 +1,52 @@
 import hashlib
-import rsa
+import random
+import math
 
-def md5_hash(message):
-    md5_hasher = hashlib.md5()
-    md5_hasher.update(message.encode())
-    hash_value = md5_hasher.hexdigest()
+print("Setting up RSA")
+p = int(input("Enter a prime number p:\n"))
+q = int(input("Enter a prime number q:\n"))
 
-    return hash_value
+n = p * q
+fn = (p - 1) * (q - 1)
 
-def generate_keys():
-    # Generate RSA keys
-    public_key, private_key = rsa.newkeys(1024)
-    return public_key, private_key
+e = random.randint(2, fn - 1)
+while math.gcd(e, fn) != 1:
+    e = random.randint(2, fn - 1)
 
-def sign(message, private_key):
-    hashed_message = md5_hash(message)
-    # Sign the hashed message using the private key
-    signature = rsa.sign(hashed_message.encode(), private_key, 'MD5')
+d = pow(e, -1, fn)
 
-    return signature
+print(f"Public key (e, n) is ({e}, {n})")
+print(f"Private key (d, n) is ({d}, {n})")
 
-def verify(message, signature, public_key):
-    hashed_message = md5_hash(message)
-    # Verify the signature using the public key
-    try:
-        rsa.verify(hashed_message.encode(), signature, public_key)
-        return True
-    except rsa.VerificationError:
-        return False
+def encrypt(k, plaintext):
+    e,n = k
+    ct = pow(plaintext, e, n)
+    return ct
 
+def decrypt(k, ciphertext):
+    d,n = k
+    decrypted_pt = pow(ciphertext, d, n)
+    return decrypted_pt
+
+hasher = hashlib.md5()
+
+print("\nSender Side")
 message = input("Enter the message: ")
-public_key, private_key = generate_keys()
+hasher.update(message.encode())
+message_hash_sender = int(hasher.hexdigest(), 16) % n
+print(f"Message Digest : {message_hash_sender}")
 
-signature = sign(message, private_key)
-print("Signature:", signature)
+signature = encrypt((e, n), message_hash_sender)
+print(f"\nSignature : {signature}")
+print(f"Sender sends (Message, Signature) to Receiver : {(message, signature)}")
 
-is_verified = verify(message, signature, public_key)
-print("Signature Verified:", is_verified)
+print("\nReceiver Side")
+
+message_hash_receiver = int(hasher.hexdigest(), 16) % n
+print(f"\nHash of message at Receiver : {message_hash_receiver}")
+hashfromsignature = decrypt((d, n), signature)
+print(f"Hash from signature : {hashfromsignature}")
+if hashfromsignature == message_hash_receiver:
+    print("\nVerifed as both hash matches")
+else:
+    print("\nError")
