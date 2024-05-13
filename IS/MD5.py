@@ -1,73 +1,57 @@
-import math
+text = 'Hello my name is Varun'
+text_binary = ''
+for letter in text:
+  text_binary += bin(ord(letter))[2:]
+print(f'Binary input : {text_binary[:20]}..\n')
 
-# Define MD5 auxiliary functions
-def left_rotate(x, c):
-    return ((x << c) & 0xffffffff) | (x >> (32 - c))
+padding = 512 - 64 - (len(text_binary)%512)
+print(f'Padding needed = {padding} bits\n')
 
-def F(X, Y, Z):
-    return (X & Y) | (~X & Z)
+lengthInBinary = len(bin(len(text_binary))[2:])
+text_padded = text_binary + '1' + '0'*(padding-1) + '0'*(64-lengthInBinary) +bin(len(text_binary))[2:]
+print(f'Padded input is : {text_padded[0:20]}..')
+print(f'Length of padded input is : {len(text_padded)}\n')
 
-def G(X, Y, Z):
-    return (X & Z) | (Y & ~Z)
+#inititialize Chaining variables 
+A = '0x01234567'
+B = '0x89ABCDEF'
+C = '0XFEDCBA98'
+D = '0x76543210'
+print(f'Chaining variables are : {A,B,C,D}\n')
 
-def H(X, Y, Z):
-    return X ^ Y ^ Z
+#Seperate the 512 bit padded input into 32 bit blocks
+blocks = []
+for i in range(0,len(text_padded),32):
+  blocks.append(text_padded[i:i+32])
+print(f"32 Bit Blocks : {blocks}")
+print(f"Number of 32 Bit Blocks : {len(blocks)} \n")
 
-def I(X, Y, Z):
-    return Y ^ (X | ~Z)
+keys = ['0xe0a5e0a5', '0x465a465a', '0xf737d44a', '0x6728bd47', 
+        '0xb779d44a', '0x470bd44a', '0x34f2d44a', '0xbd47bd47', 
+        '0xc7ab1a7f', '0xd44ad44a', '0xaa85bd47', '0x1f91d44a', 
+        '0x6e541a7f', '0xdb1f1a7f', '0x13961a7f', '0x1a7f1a7f']
 
-# Define MD5 constants
-T = [int(2**32 * abs(math.sin(i + 1))) & 0xffffffff for i in range(64)]
+def f(b,c,d):
+  return hex((int(b,16) & int(c,16)) | (~int(b,16) & int(d,16)))
 
-# Define MD5 functions
-def md5(message):
-    # Define MD5 parameters
-    A = 0x67452301
-    B = 0xefcdab89
-    C = 0x98badcfe
-    D = 0x10325476
+a, b, c, d = A, B, C, D
+for i in range(16):
+  f_bcd = f(b,c,d) 
+  a = hex((int(a,16) + int(f_bcd,16)) % int('0xffffffff',16))
+  a = hex((int(a,16) + int(blocks[i],2)) % int(int('0xffffffff',16))) #msg
+  a = hex((int(a,16) + int(keys[i],16)) % int(int('0xffffffff',16))) #key
+  bin_a = bin(int(a,16))[2:]
+  a = bin_a[5:]+bin_a[:5] #Left shift by 5
+  a = hex((int(a,2)+int(b,16))%int('0xffffffff',16)) #add B
 
-    message = bytearray(message, 'utf-8')
-    original_length = len(message) * 8
-    message.append(0x80)
+  #LEFT SHIFT
+  a,b,c,d = d,a,b,c
 
-    while len(message) % 64 != 56:
-        message.append(0)
-
-    message += original_length.to_bytes(8, byteorder='little')
-
-    for i in range(0, len(message), 64):
-        chunk = message[i:i + 64]
-        a, b, c, d = A, B, C, D
-
-        for j in range(64):
-            if j < 16:
-                f = F(b, c, d)
-                g = j
-            elif j < 32:
-                f = G(b, c, d)
-                g = (5 * j + 1) % 16
-            elif j < 48:
-                f = H(b, c, d)
-                g = (3 * j + 5) % 16
-            else:
-                f = I(b, c, d)
-                g = (7 * j) % 16
-
-            f = (f + a + T[j] + int.from_bytes(chunk[g * 4:g * 4 + 4], byteorder='little')) & 0xffffffff
-            a = d
-            d = c
-            c = b
-            b = (b + left_rotate(f, [7, 12, 17, 22][j // 16])) & 0xffffffff
-
-        A = (A + a) & 0xffffffff
-        B = (B + b) & 0xffffffff
-        C = (C + c) & 0xffffffff
-        D = (D + d) & 0xffffffff
-
-    return sum(x << (32 * i) for i, x in enumerate([A, B, C, D]))
-
-
-message = input("Enter the message: ")
-hashed_message = md5(message)
-print("MD5 Hash:", hex(hashed_message))
+hashed_msg = ''
+for i in [a,b,c,d]:
+  binary = bin(int(a,16))[2:]
+  n = len(binary)
+  binary = '0'*(32-n) + binary
+  hashed_msg += binary
+print(f"Message Digest is : {hex(int(hashed_msg,2))}")
+print(f"Length of Message Digest is : {len(hashed_msg)}")
