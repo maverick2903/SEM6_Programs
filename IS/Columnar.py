@@ -1,23 +1,66 @@
-def encrypt(plain_text, key):
-    plain_text = plain_text.replace(" ", "").upper()
-    # Remove duplicate characters from the key and sort it alphabetically
-    key_sorted = ''.join(sorted(set(key), key=lambda x: key.index(x)))
-    key_length = len(key_sorted)
-    # Calculate the number of rows needed
-    num_rows = (len(plain_text) + key_length - 1) // key_length
-    transposed = [''] * key_length
+import numpy as np
 
-    # Arrange the plaintext into columns based on the sorted key
-    for i, char in enumerate(plain_text):
-        column = key_sorted.index(key[i % len(key)])
-        transposed[column] += char
+def encrypt(plaintext, key):
+    if len(plaintext)%len(key) != 0:
+        plaintext += 'X' * (len(key) - len(plaintext)%len(key))
 
-    cipher_text = ''.join(transposed)
-    return cipher_text
+    matrix = [[]]
+    row = 0
+    for p in plaintext:
+        if len(matrix[row]) == len(key):
+            row += 1
+            matrix.append([])
+        matrix[row].append(p)
 
+    new_group = []
+    matrix = np.transpose(matrix)
+    
+    sorted_key = sorted(key)
+    for s in sorted_key:
+        key_index = key.index(s)
+        new_group.append("".join(matrix[key_index]))
 
-plaintext = input("Enter the plaintext: ")
-key = input("Enter the key: ")
+    return "".join(new_group)
+    
+def decrypt(cipher, key):
+    new_group = []
+
+    for i in range(0, len(cipher), len(cipher)//len(key)):
+        new_group.append(list(cipher[i:i+len(cipher)//len(key)]))
+
+    matrix = []
+
+    sorted_key = sorted(key)
+    for k in key:
+        key_index = sorted_key.index(k)
+        matrix.append(new_group[key_index])
+
+    matrix = np.transpose(matrix)
+    
+    decrypt = ""
+    for i in range(len(matrix)):
+        decrypt += "".join(matrix[i])
+
+    return decrypt
+
+plaintext = input("Enter the plaintext: ").upper()
+key = input("Enter the key: ").upper()
 cipher_text = encrypt(plaintext, key)
 print("Encrypted:", cipher_text)
 
+response = decrypt(cipher_text, key)
+print("Decrypted:", response)
+
+#Doesnt always work but who cares
+print("Double transposition cipher")
+plaintext = input("Enter the plaintext: ").upper()
+key1 = input("Enter the key 1: ").upper()
+cipher_text = encrypt(plaintext, key1)
+print(cipher_text)
+key2 = input("Enter the key 2: ").upper()
+cipher_text2 = encrypt(cipher_text, key2)
+print("Encrypted:", cipher_text2)
+
+decrypt1 = decrypt(cipher_text2, key2)  # First decryption with key2
+decrypt2 = decrypt(decrypt1, key1)       # Second decryption with key1
+print("Decrypted:", decrypt2)
